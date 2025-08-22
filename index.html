@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOVAFinder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://baptiste-reb.fr/img/favicon.ico" type="image/x-icon">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://baptiste-reb.fr/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://baptiste-reb.fr/img/favicon-16x16.png">
+  <style>
+    body, input { font-family: 'Roboto', sans-serif; }
+    #query:focus { outline: none; }
+    .logo-nova { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; }
+    .logo-finder { font-family: 'Roboto', sans-serif; font-size: 2rem; margin-left: 0.3rem; }
+  </style>
+</head>
+<body class="h-screen w-screen relative flex flex-col items-center justify-center bg-gray-100">
+
+  <div class="absolute inset-0 z-0" 
+       style="background-image: url('background.jpg'); background-size: cover; background-position: center;">
+    <div class="absolute inset-0 bg-black/60"></div> <!-- 60% noir -->
+  </div>
+
+  <div class="relative z-10 flex flex-col items-center w-full">
+
+    <div class="mb-8 flex items-baseline text-white select-none">
+      <span class="font-bold text-6xl tracking-wide">NOVA</span>
+      <span class="font-normal text-6xl tracking-wide ml-2">Finder</span>
+    </div>
+
+    <form id="searchForm" class="w-full max-w-lg flex mb-4 relative group">
+      <input id="query" type="text" placeholder="Type your search..." 
+             class="flex-1 px-6 py-3 rounded-l-full rounded-r-none bg-blue-100/80 text-lg text-gray-900 focus:ring-2 focus:ring-blue-400">
+
+      <button type="submit" class="px-6 rounded-r-full rounded-l-none bg-blue-500 text-white hover:bg-blue-600 relative">
+        Go
+        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-black/80 text-white text-sm p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+          <p class="font-bold mb-1">Available commands:</p>
+          <ul class="list-disc ml-4">
+            <li><strong>!ia [query]</strong> → Search with AI (Perplexity)</li>
+            <li><strong>!timer [minutes]</strong> → Start a timer</li>
+            <li><strong>!trad [text]</strong> → Translate text via Google Translate</li>
+          </ul>
+        </div>
+      </button>
+    </form>
+
+    <div id="timersContainer" class="flex flex-col gap-2 mt-4 w-full max-w-lg text-center"></div>
+
+    <footer class="mt-auto mb-4 text-center text-white/70 text-sm w-full">
+      by <a href="https://baptiste-reb.fr" target="_blank" class="underline hover:text-white">Baptiste Rébillard</a>
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById("searchForm");
+    const timersContainer = document.getElementById("timersContainer");
+    const queryInput = document.getElementById("query");
+
+    const infoBtn = document.getElementById("infoBtn");
+    const infoBox = document.getElementById("infoBox");
+
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = queryInput.value.trim();
+      if (!input) return;
+
+      if (input.startsWith("!ia")) {
+        const query = encodeURIComponent(input.replace("!ia", "").trim());
+        window.open(`https://www.perplexity.ai/search?q=${query}`, "_blank");
+        queryInput.value = "";
+        queryInput.focus();
+        return;
+      }
+
+      if (input.startsWith("!timer")) {
+        const parts = input.split(" ");
+        const minutes = parseInt(parts[1]);
+        if (isNaN(minutes) || minutes <= 0) {
+          alert("Erreur : temps invalide");
+          return;
+        }
+
+        addTimer(minutes);
+        queryInput.value = "";
+        queryInput.focus();
+        return;
+      }
+
+    if (input.startsWith("!trans")) {
+      const textToTranslate = encodeURIComponent(input.replace("!trad", "").trim());
+      if (!textToTranslate) {
+        alert("Erreur : aucun texte à traduire");
+        return;
+      }
+      // ouvrira Google Translate avec détection automatique de la langue vers le français
+      window.open(`https://translate.google.com/?sl=auto&tl=fr&text=${textToTranslate}&op=translate`, "_blank");
+      queryInput.value = "";
+      queryInput.focus();
+      return;
+    }
+
+      const googleQuery = encodeURIComponent(input);
+      window.location.href = `https://www.google.com/search?q=${googleQuery}`;
+    });
+
+    function addTimer(minutes) {
+      let remaining = minutes * 60;
+
+      const timerEl = document.createElement("div");
+      timerEl.className = "bg-white/80 rounded-lg p-2 shadow text-gray-800 text-lg font-bold";
+      timerEl.textContent = formatTime(remaining);
+
+      timersContainer.appendChild(timerEl);
+
+      const interval = setInterval(() => {
+        remaining--;
+        timerEl.textContent = formatTime(remaining);
+        if (remaining <= 0) {
+          clearInterval(interval);
+          timerEl.textContent = "⏰ Time's up!";
+          timerEl.classList.add("text-red-600");
+          sendNotification("Timer terminé", `Your ${minutes} minute(s) timer is up!`);
+        }
+      }, 1000);
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    }
+
+    function sendNotification(title, message) {
+      if (Notification.permission === "granted") {
+        new Notification(title, { body: message });
+      }
+    }
+
+    window.addEventListener("keydown", () => {
+      if (document.activeElement !== queryInput) {
+        queryInput.focus();
+      }
+    });
+
+    // Gestion du paramètre GET ?search=
+    const params = new URLSearchParams(window.location.search);
+    const searchQuery = params.get("search");
+    if (searchQuery) {
+      queryInput.value = searchQuery;
+      console.log(searchQuery)
+      form.requestSubmit(); // lance la recherche auto
+    }
+  </script>
+</body>
+</html>
