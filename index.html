@@ -54,6 +54,11 @@
     </footer>
   </div>
 
+  <div id="weatherWidget" class="absolute top-4 right-4 z-20 hidden w-64 backdrop-blur-lg bg-white/20 rounded-xl p-4 shadow-lg text-white">
+    <div id="location" class="text-center font-bold text-sm mb-2"></div>
+    <div id="weatherDays" class="grid grid-cols-1 gap-2"></div>
+  </div>
+
   <script>
     const form = document.getElementById("searchForm");
     const timersContainer = document.getElementById("timersContainer");
@@ -153,6 +158,55 @@
       console.log(searchQuery)
       form.requestSubmit(); // lance la recherche auto
     }
+  </script>
+  <script>
+    const weatherWidget = document.getElementById("weatherWidget"),
+          weatherDays = document.getElementById("weatherDays"),
+          locationEl = document.getElementById("location");
+
+    async function getCoords(city){
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+      const data = await res.json();
+      return data.length ? {lat:data[0].lat, lon:data[0].lon} : null;
+    }
+
+    async function initWeather(){
+      let city = localStorage.getItem("novaCity");
+      if(!city){
+        city = prompt("Welcome to NOVAFinder!\nEnter your city or postal code for weather:");
+        if(!city) return;
+        localStorage.setItem("novaCity", city);
+      }
+      const coords = await getCoords(city);
+      if(!coords){ alert("City/postal code not found."); localStorage.removeItem("novaCity"); return; }
+
+      try{
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe/Paris`);
+        const data = await res.json();
+        showWeather(data, coords.lat, coords.lon);
+      }catch(e){ console.error("Weather error:", e); }
+    }
+
+    function showWeather(data, lat, lon){
+      weatherWidget.classList.remove("hidden");
+      locationEl.textContent = `Weather forecast`;
+      weatherDays.innerHTML = data.daily.time.map((d,i)=>{
+        const date = new Date(d),
+              day = date.toLocaleDateString("en-US",{weekday:"short"}),
+              max = Math.round(data.daily.temperature_2m_max[i]),
+              min = Math.round(data.daily.temperature_2m_min[i]),
+              code = data.daily.weathercode[i],
+              icon = getIcon(code),
+              link = `https://wttr.in/${lat},${lon}`;
+        return `<a href="${link}" target="_blank" class="flex justify-between bg-white/20 hover:bg-white/30 p-2 rounded cursor-pointer text-sm font-medium">
+                  <span>${day}</span><span>${icon}</span><span>${max}° / ${min}°</span>
+                </a>`;
+      }).join("");
+    }
+
+    function getIcon(c){return c===0?"☀️":c<=2?"🌤️":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":c<=86?"❄️":c<=99?"⛈️":"❓";}
+
+    initWeather();
   </script>
 </body>
 </html>
