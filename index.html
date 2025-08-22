@@ -39,9 +39,9 @@
         <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-black/80 text-white text-sm p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
           <p class="font-bold mb-1">Available commands:</p>
           <ul class="list-disc ml-4">
-            <li><strong>!ia [query]</strong> → Search with AI (Perplexity)</li>
+            <li><strong>!ai [query]</strong> → Search with AI (Perplexity)</li>
             <li><strong>!timer [minutes]</strong> → Start a timer</li>
-            <li><strong>!trad [text]</strong> → Translate text via Google Translate</li>
+            <li><strong>!trans [text]</strong> → Translate text via Google Translate</li>
           </ul>
         </div>
       </button>
@@ -71,11 +71,9 @@
       const input = queryInput.value.trim();
       if (!input) return;
 
-      if (input.startsWith("!ia")) {
-        const query = encodeURIComponent(input.replace("!ia", "").trim());
-        window.open(`https://www.perplexity.ai/search?q=${query}`, "_blank");
-        queryInput.value = "";
-        queryInput.focus();
+      if (input.startsWith("!ai")) {
+        const query = encodeURIComponent(input.replace("!ai", "").trim());
+        window.location.href = `https://www.perplexity.ai/search?q=${query}`;
         return;
       }
 
@@ -94,15 +92,13 @@
       }
 
     if (input.startsWith("!trans")) {
-      const textToTranslate = encodeURIComponent(input.replace("!trad", "").trim());
+      const textToTranslate = encodeURIComponent(input.replace("!trans", "").trim());
       if (!textToTranslate) {
-        alert("Erreur : aucun texte à traduire");
+        alert("Erreur : no text to translate");
         return;
       }
       // ouvrira Google Translate avec détection automatique de la langue vers le français
-      window.open(`https://translate.google.com/?sl=auto&tl=fr&text=${textToTranslate}&op=translate`, "_blank");
-      queryInput.value = "";
-      queryInput.focus();
+      window.location.href = `https://translate.google.com/?sl=auto&tl=fr&text=${textToTranslate}&op=translate`;
       return;
     }
 

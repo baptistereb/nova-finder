@@ -10,7 +10,7 @@ A **custom search engine** with extra commands, timers, and a clean UI.
 - Special commands for productivity:
   - `!ia [query]` → Search with AI (Perplexity).
   - `!timer [minutes]` → Start a countdown timer with desktop notification.
-  - `!trad [text]` → Translate text using Google Translate (auto-detect → French).
+  - `!trans [text]` → Translate text using Google Translate (auto-detect → French).
 - Input focus always returns to the search bar for fast usage.
 - TailwindCSS-based modern UI.
 
@@ -34,7 +34,7 @@ You can set **NOVA Finder** as your default search engine in Brave, Chrome, or a
 
 ## 🎯 Usage examples
 - Typing `hello world` → standard Google search.
-- Typing `!ia quantum computing` → opens Perplexity with the query.
+- Typing `!ai quantum computing` → opens Perplexity with the query.
 - Typing `!timer 5` → starts a 5-minute countdown.
 - Typing `!trad hello` → opens Google Translate with "hello" translated to French.
 
